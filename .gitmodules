@@ -1,3 +1,0 @@
-[submodule "3rd/draco"]
-	path = 3rd/draco
-	url = https://github.com/google/draco.git
