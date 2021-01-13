@@ -4,98 +4,68 @@
 # Helper function for finding the FBX SDK.
 # Cribbed & tweaked from https://github.com/floooh/fbxc/
 #
-# params: FBXSDK_VERSION
-#         FBXSDK_SDKS
+# params:
+#         FBXSDK_ROOT         //it specify where sdk root, for window: ${FBXSDK_INSTALL_FOLDER}/2019.2
 #
-# sets:   FBXSDK_FOUND
-#         FBXSDK_DIR
-#         FBXSDK_LIBRARY
-#         FBXSDK_LIBRARY_DEBUG
-#         FBXSDK_INCLUDE_DIR
+# sets:   FBXSDK_FOUND        //will set to TRUE at the last of this file
+#         FBXSDK_INCLUDE_DIR  //where fbxsdk.h file folder
+#         FBXSDK_LIBS         //include libfbxsdk, libxml2, zib
 #
+# only support ARCH_64
+set(ARCH_32 OFF)
 
-# semi-hack to detect architecture
-if( CMAKE_SIZEOF_VOID_P MATCHES 8 )
-  # void ptr = 8 byte --> x86_64
-  set(ARCH_32 OFF)
-else()
-  # void ptr != 8 byte --> x86
-  set(ARCH_32 OFF)
+if (NOT DEFINED FBXSDK_ROOT)
+  message(STATUS "FBXSDK_SDKS is not define, make it as: ${CMAKE_CURRENT_SOURCE_DIR}/sdk" )
+  set(FBXSDK_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/sdk")
 endif()
 
-if (NOT DEFINED FBXSDK_VERSION)
-  set(FBXSDK_VERSION "2019.2")
+message(STATUS "FBXSDK_ROOT: ${FBXSDK_ROOT}")
+
+if (NOT EXISTS ${FBXSDK_ROOT})
+  message(FATAL_ERROR "FBXSDK_ROOT:${FBXSDK_ROOT} path is not exists!")
 endif()
 
-set(_fbxsdk_vstudio_version "vs2017")
+macro (gen_msvc_lib_name LIBNAME BASENAME)
+  if (DEBUG_BUILD)
+    set(${LIBNAME} ${BASENAME}-md.lib)
+  else()
+    set(${LIBNAME} ${BASENAME}-mt.lib)
+  endif()
+endmacro()
 
-message("Looking for FBX SDK version: ${FBXSDK_VERSION}")
-
-if (NOT DEFINED FBXSDK_SDKS)
-   set(FBXSDK_SDKS "${CMAKE_CURRENT_SOURCE_DIR}/sdk")
-endif()
-
-get_filename_component(FBXSDK_SDKS_ABS ${FBXSDK_SDKS} ABSOLUTE)
-
-set(FBXSDK_APPLE_ROOT   "${FBXSDK_SDKS_ABS}/Darwin/${FBXSDK_VERSION}")
-set(FBXSDK_LINUX_ROOT   "${FBXSDK_SDKS_ABS}/Linux/${FBXSDK_VERSION}")
-set(FBXSDK_WINDOWS_ROOT "${FBXSDK_SDKS_ABS}/Windows/${FBXSDK_VERSION}")
+set(FBXSDK_INCLUDE_DIR "${FBXSDK_ROOT}/include")
+message(STATUS "FBXSDK_INCLUDE_DIR: ${FBXSDK_INCLUDE_DIR}")
 
 if (APPLE)
-  set(_fbxsdk_root "${FBXSDK_APPLE_ROOT}")
-  set(_fbxsdk_libdir_debug "lib/clang/debug")
-  set(_fbxsdk_libdir_release "lib/clang/release")
-  set(_fbxsdk_libname_debug "libfbxsdk.a")
-  set(_fbxsdk_libname_release "libfbxsdk.a")
+  message(FATAL_ERROR "Not implement macOS")
+  # set(DEBUG_DIR "lib/clang/debug")
+  # set(RELEASE_DIR "lib/clang/release")
+  # set(DEBUG_BASENAME "libfbxsdk.a")
+  # set(RELEASE_BASENAME "libfbxsdk.a")
 elseif (WIN32)
-  set(_fbxsdk_root "${FBXSDK_WINDOWS_ROOT}")
-  if (ARCH_32)
-    set(_fbxsdk_libdir_debug "lib/${_fbxsdk_vstudio_version}/x86/debug")
-    set(_fbxsdk_libdir_release "lib/${_fbxsdk_vstudio_version}/x86/release")
-  else()
-    set(_fbxsdk_libdir_debug "lib/${_fbxsdk_vstudio_version}/x64/debug")
-    set(_fbxsdk_libdir_release "lib/${_fbxsdk_vstudio_version}/x64/release")
-  endif()
-  set(_fbxsdk_libname_debug "libfbxsdk-md.lib")
-  set(_fbxsdk_libname_release "libfbxsdk-md.lib")
-elseif (UNIX)
-  set(_fbxsdk_root "${FBXSDK_LINUX_ROOT}")
-  if (ARCH_32)
-    set(_fbxsdk_libdir_debug "lib/gcc/x86/debug")
-    set(_fbxsdk_libdir_release "lib/gcc/x86/release")
-  else()
-    set(_fbxsdk_libdir_debug "lib/gcc/x64/debug")
-    set(_fbxsdk_libdir_release "lib/gcc/x64/release")
-  endif()
-  set(_fbxsdk_libname_debug "libfbxsdk.a")
-  set(_fbxsdk_libname_release "libfbxsdk.a")
+  set(VS_VERSION "vs2017")
+  gen_msvc_lib_name(FBXSDK_LIBNAME libfbxsdk)
+  gen_msvc_lib_name(FBXSDK_XML2_LIBNAME libxml2)
+  gen_msvc_lib_name(FBXSDK_ZIB_LIBNAME zlib)
+
+  set(FBXSDK_LIB_DIR "${FBXSDK_ROOT}/lib/vs2017/x64/${CMAKE_BUILD_TYPE}")
 else()
-  message(FATAL_ERROR, "Unknown platform. Can't find FBX SDK.")
+  message(FATAL_ERROR "not support platform!")
 endif()
 
-# should point the the FBX SDK installation dir
-set(FBXSDK_ROOT "${_fbxsdk_root}")
-message("FBXSDK_ROOT: ${FBXSDK_ROOT}")
+message(STATUS "FBXSDK_LIB_DIR:${FBXSDK_LIB_DIR}")
 
-# find header dir and libs
-find_path(FBXSDK_INCLUDE_DIR "fbxsdk.h"
-  NO_CMAKE_FIND_ROOT_PATH
-  PATHS ${FBXSDK_ROOT}
-  PATH_SUFFIXES "include")
-message("FBXSDK_INCLUDE_DIR: ${FBXSDK_INCLUDE_DIR}")
+set(FBX_LIB "${FBXSDK_LIB_DIR}/${FBXSDK_LIBNAME}")
+set(XML2_LIB "${FBXSDK_LIB_DIR}/${FBXSDK_XML2_LIBNAME}")
+set(ZIB_LIB "${FBXSDK_LIB_DIR}/${FBXSDK_ZIB_LIBNAME}")
 
-find_library(FBXSDK_LIBRARY ${_fbxsdk_libname_release}
-  NO_CMAKE_FIND_ROOT_PATH
-  PATHS "${FBXSDK_ROOT}/${_fbxsdk_libdir_release}")
-message("FBXSDK_LIBRARY: ${FBXSDK_LIBRARY}")
+set(FBXSDK_LIBS ${FBX_LIB} ${XML2_LIB} ${ZIB_LIB})
+message(STATUS "FBXSDK_LIBS:${FBXSDK_LIBS}")
 
-find_library(FBXSDK_LIBRARY_DEBUG ${_fbxsdk_libname_debug}
-  NO_CMAKE_FIND_ROOT_PATH
-  PATHS "${FBXSDK_ROOT}/${_fbxsdk_libdir_debug}")
-message("FBXSDK_LIBRARY_DEBUG: ${FBXSDK_LIBRARY_DEBUG}")
+foreach(x IN LISTS FBXSDK_LIBS)
+  if (NOT EXISTS ${x})
+    message(FATAL_ERROR "lib:${x} is not exist!")
+  endif()
+endforeach()
 
-if (FBXSDK_INCLUDE_DIR AND FBXSDK_LIBRARY AND FBXSDK_LIBRARY_DEBUG)
-  set(FBXSDK_FOUND YES)
-else()
-  set(FBXSDK_FOUND NO)
-endif()
+set(FBXSDK_FOUND YES)

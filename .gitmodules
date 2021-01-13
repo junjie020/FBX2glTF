@@ -1,0 +1,18 @@
+[submodule "third_party/draco"]
+	path = third_party/draco
+	url = https://github.com/google/draco.git
+[submodule "third_party/cppcodec"]
+	path = third_party/cppcodec
+	url = https://github.com/tplgy/cppcodec.git
+[submodule "third_party/fifo_map"]
+	path = third_party/fifo_map
+	url = https://github.com/nlohmann/fifo_map
+[submodule "third_party/mathfu"]
+	path = third_party/mathfu
+	url = https://github.com/google/mathfu
+[submodule "third_party/fmt"]
+	path = third_party/fmt
+	url = https://github.com/fmtlib/fmt.git
+[submodule "third_party/json"]
+	path = third_party/json
+	url = https://github.com/nlohmann/json.git

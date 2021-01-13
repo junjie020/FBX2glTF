@@ -145,7 +145,8 @@ std::shared_ptr<TextureData> TextureBuilder::combine(
   } else {
     const std::string imageFilename = mergedFilename + (png ? ".png" : ".jpg");
     const std::string imagePath = outputFolder + imageFilename;
-    FILE* fp = fopen(imagePath.c_str(), "wb");
+    FILE* fp = nullptr;
+    fopen_s(&fp, imagePath.c_str(), "wb");
     if (fp == nullptr) {
       fmt::printf("Warning:: Couldn't write file '%s' for writing.\n", imagePath);
       return nullptr;

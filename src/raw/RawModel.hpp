@@ -72,9 +72,9 @@ class VertexHasher {
 };
 
 struct RawTriangle {
-  int verts[3];
-  int materialIndex;
-  int surfaceIndex;
+  int32_t verts[3];
+  int32_t materialIndex;
+  int32_t surfaceIndex;
 };
 
 enum RawShadingModel {
@@ -252,7 +252,7 @@ struct RawMetRoughMatProps : RawMatProps {
 };
 
 struct RawMaterial {
-  long id;
+  uint64_t id;
   std::string name;
   RawMaterialType type;
   std::shared_ptr<RawMatProps> info;
@@ -277,17 +277,17 @@ struct RawLight {
 
 struct RawBlendChannel {
   float defaultDeform;
+  std::string name;
   bool hasNormals;
   bool hasTangents;
-  std::string name;
 };
 
 struct RawSurface {
-  long id;
+  uint64_t id;
   std::string name; // The name of this surface
-  long skeletonRootId; // The id of the root node of the skeleton.
+  uint64_t skeletonRootId; // The id of the root node of the skeleton.
   Bounds<float, 3> bounds;
-  std::vector<long> jointIds;
+  std::vector<uint64_t> jointIds;
   std::vector<Vec3f> jointGeometryMins;
   std::vector<Vec3f> jointGeometryMaxs;
   std::vector<Mat4f> inverseBindMatrices;
@@ -311,7 +311,7 @@ struct RawAnimation {
 
 struct RawCamera {
   std::string name;
-  long nodeId;
+  uint64_t nodeId;
 
   enum { CAMERA_MODE_PERSPECTIVE, CAMERA_MODE_ORTHOGRAPHIC } mode;
 
@@ -333,15 +333,15 @@ struct RawCamera {
 
 struct RawNode {
   bool isJoint;
-  long id;
+  uint64_t id;
   std::string name;
-  long parentId;
-  std::vector<long> childIds;
+  uint64_t parentId;
+  std::vector<uint64_t> childIds;
   Vec3f translation;
   Quatf rotation;
   Vec3f scale;
-  long surfaceId;
-  long lightIx;
+  uint64_t surfaceId;
+  uint32_t lightIx;
   std::vector<std::string> userProperties;
 };
 
@@ -351,59 +351,55 @@ class RawModel {
 
   // Add geometry.
   void AddVertexAttribute(const RawVertexAttribute attrib);
-  int AddVertex(const RawVertex& vertex);
-  int AddTriangle(
-      const int v0,
-      const int v1,
-      const int v2,
-      const int materialIndex,
-      const int surfaceIndex);
-  int AddTexture(
+  int32_t AddVertex(const RawVertex& vertex);
+  int32_t AddTriangle(
+      int32_t v0,
+      int32_t v1, 
+      int32_t v2,
+      int32_t materialIndex,
+      int32_t surfaceIndex);
+  int32_t AddTexture(
       const std::string& name,
       const std::string& fileName,
       const std::string& fileLocation,
       RawTextureUsage usage);
-  int AddMaterial(const RawMaterial& material);
-  int AddMaterial(
-      const long id,
+  int32_t AddMaterial(const RawMaterial& material);
+  int32_t AddMaterial(
+      uint64_t id,
       const char* name,
       const RawMaterialType materialType,
       const int textures[RAW_TEXTURE_USAGE_MAX],
       std::shared_ptr<RawMatProps> materialInfo,
       const std::vector<std::string>& userProperties);
-  int AddLight(
+  int32_t AddLight(
       const char* name,
       RawLightType lightType,
       Vec3f color,
       float intensity,
       float innerConeAngle,
       float outerConeAngle);
-  int AddSurface(const RawSurface& suface);
-  int AddSurface(const char* name, long surfaceId);
-  int AddAnimation(const RawAnimation& animation);
-  int AddCameraPerspective(
+  int32_t AddSurface(const RawSurface& suface);
+  int32_t AddSurface(const char* name, uint64_t surfaceId);
+  int32_t AddAnimation(const RawAnimation& animation);
+  int32_t AddCameraPerspective(
       const char* name,
-      const long nodeId,
-      const float aspectRatio,
-      const float fovDegreesX,
-      const float fovDegreesY,
-      const float nearZ,
-      const float farZ);
-  int AddCameraOrthographic(
+      uint64_t nodeId,
+      float aspectRatio,
+      float fovDegreesX,
+      float fovDegreesY,
+      float nearZ,
+      float farZ);
+  int32_t AddCameraOrthographic(
       const char* name,
-      const long nodeId,
-      const float magX,
-      const float magY,
-      const float nearZ,
-      const float farZ);
-  int AddNode(const RawNode& node);
-  int AddNode(const long id, const char* name, const long parentId);
-  void SetRootNode(const long nodeId) {
-    rootNodeId = nodeId;
-  }
-  const long GetRootNode() const {
-    return rootNodeId;
-  }
+      uint64_t nodeId,
+      float magX,
+      float magY,
+      float nearZ,
+      float farZ);
+  int32_t AddNode(const RawNode& node);
+  int32_t AddNode(uint64_t id, const char* name, uint64_t parentId);
+  void SetRootNode(uint64_t nodeId) {rootNodeId = nodeId;}
+  uint64_t GetRootNode() const {return rootNodeId;}
 
   // Remove unused vertices, textures or materials after removing vertex attributes, textures,
   // materials or surfaces.
@@ -413,92 +409,85 @@ class RawModel {
 
   void TransformTextures(const std::vector<std::function<Vec2f(Vec2f)>>& transforms);
 
-  size_t CalculateNormals(bool);
+  uint32_t CalculateNormals(bool onlyBroken);
 
   // Get the attributes stored per vertex.
-  int GetVertexAttributes() const {
+  uint32_t GetVertexAttributes() const {
     return vertexAttributes;
   }
 
   // Iterate over the vertices.
-  int GetVertexCount() const {
-    return (int)vertices.size();
+  uint32_t GetVertexCount() const {
+    return (uint32_t)vertices.size();
   }
-  const RawVertex& GetVertex(const int index) const {
+  const RawVertex& GetVertex(int32_t index) const {
     return vertices[index];
   }
 
   // Iterate over the triangles.
-  int GetTriangleCount() const {
-    return (int)triangles.size();
+  uint32_t GetTriangleCount() const {
+    return (uint32_t)triangles.size();
   }
-  const RawTriangle& GetTriangle(const int index) const {
+  const RawTriangle& GetTriangle(int32_t index) const {
     return triangles[index];
   }
 
   // Iterate over the textures.
-  int GetTextureCount() const {
-    return (int)textures.size();
-  }
-  const RawTexture& GetTexture(const int index) const {
+  uint32_t GetTextureCount() const { return (uint32_t)textures.size();}
+  const RawTexture& GetTexture(int32_t index) const {
     return textures[index];
   }
 
   // Iterate over the materials.
-  int GetMaterialCount() const {
-    return (int)materials.size();
-  }
-  const RawMaterial& GetMaterial(const int index) const {
-    return materials[index];
-  }
+  uint32_t GetMaterialCount() const { return (uint32_t)materials.size();}
+  const RawMaterial& GetMaterial(int32_t index) const { return materials[index];}
 
   // Iterate over the surfaces.
-  int GetSurfaceCount() const {
-    return (int)surfaces.size();
-  }
-  const RawSurface& GetSurface(const int index) const {
+  uint32_t GetSurfaceCount() const {return (uint32_t)surfaces.size();}
+  const RawSurface& GetSurface(int32_t index) const {
     return surfaces[index];
   }
-  RawSurface& GetSurface(const int index) {
+  RawSurface& GetSurface(int32_t index) {
     return surfaces[index];
   }
-  int GetSurfaceById(const long id) const;
+
+  int32_t GetSurfaceById(uint64_t id) const;
 
   // Iterate over the animations.
-  int GetAnimationCount() const {
-    return (int)animations.size();
+  uint32_t GetAnimationCount() const {
+    return (uint32_t)animations.size();
   }
-  const RawAnimation& GetAnimation(const int index) const {
+  const RawAnimation& GetAnimation(int32_t index) const {
     return animations[index];
   }
 
   // Iterate over the cameras.
-  int GetCameraCount() const {
-    return (int)cameras.size();
+  uint32_t GetCameraCount() const {
+    return (uint32_t)cameras.size();
   }
-  const RawCamera& GetCamera(const int index) const {
+  const RawCamera& GetCamera(int32_t index) const {
     return cameras[index];
   }
 
   // Iterate over the lights.
-  int GetLightCount() const {
-    return (int)lights.size();
+  uint32_t GetLightCount() const {
+    return (uint32_t)lights.size();
   }
-  const RawLight& GetLight(const int index) const {
+  const RawLight& GetLight(int32_t index) const {
     return lights[index];
   }
 
   // Iterate over the nodes.
-  int GetNodeCount() const {
-    return (int)nodes.size();
+  int32_t GetNodeCount() const {
+    return (int32_t)nodes.size();
   }
-  const RawNode& GetNode(const int index) const {
+  const RawNode& GetNode(int32_t index) const {
     return nodes[index];
   }
-  RawNode& GetNode(const int index) {
+  RawNode& GetNode(int32_t index) {
     return nodes[index];
   }
-  int GetNodeById(const long nodeId) const;
+  int32_t GetNodeById(uint64_t nodeId) const;
 
   // Create individual attribute arrays.
   // Returns true if the vertices store the particular attribute.
@@ -518,8 +507,8 @@ class RawModel {
  private:
   Vec3f getFaceNormal(int verts[3]) const;
 
-  long rootNodeId;
-  int vertexAttributes;
+  uint64_t rootNodeId;
+  uint32_t vertexAttributes;
   std::unordered_map<RawVertex, int, VertexHasher> vertexHash;
   std::vector<RawVertex> vertices;
   std::vector<RawTriangle> triangles;

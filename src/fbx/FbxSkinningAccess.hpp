@@ -28,8 +28,8 @@ class FbxSkinningAccess {
     return (vertexJointWeights.size() > 0);
   }
 
-  int GetNodeCount() const {
-    return (int)jointNodes.size();
+  uint32_t GetNodeCount() const {
+    return (uint32_t)jointNodes.size();
   }
 
   FbxNode* GetJointNode(const int jointIndex) const {

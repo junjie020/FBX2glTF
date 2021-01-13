@@ -251,11 +251,11 @@ int main(int argc, char* argv[]) {
   std::vector<std::function<Vec2f(Vec2f)>> texturesTransforms;
   if (do_flip_u || do_flip_v) {
     if (do_flip_u && do_flip_v) {
-      texturesTransforms.emplace_back([](Vec2f uv) { return Vec2f(1.0 - uv[0], 1.0 - uv[1]); });
+      texturesTransforms.emplace_back([](Vec2f uv) { return Vec2f(1.f - uv[0], 1.f - uv[1]); });
     } else if (do_flip_u) {
-      texturesTransforms.emplace_back([](Vec2f uv) { return Vec2f(1.0 - uv[0], uv[1]); });
+      texturesTransforms.emplace_back([](Vec2f uv) { return Vec2f(1.f - uv[0], uv[1]); });
     } else {
-      texturesTransforms.emplace_back([](Vec2f uv) { return Vec2f(uv[0], 1.0 - uv[1]); });
+      texturesTransforms.emplace_back([](Vec2f uv) { return Vec2f(uv[0], 1.f - uv[1]); });
     }
   }
   if (verboseOutput) {
@@ -370,7 +370,8 @@ int main(int argc, char* argv[]) {
   assert(!outputFolder.empty());
 
   const std::string binaryPath = outputFolder + extBufferFilename;
-  FILE* fp = fopen(binaryPath.c_str(), "wb");
+  FILE* fp = nullptr;
+  fopen_s(&fp, binaryPath.c_str(), "wb");
   if (fp == nullptr) {
     fmt::fprintf(stderr, "ERROR:: Couldn't open file '%s' for writing.\n", binaryPath);
     return 1;
@@ -378,7 +379,7 @@ int main(int argc, char* argv[]) {
 
   if (data_render_model->binary->empty() == false) {
     const unsigned char* binaryData = &(*data_render_model->binary)[0];
-    unsigned long binarySize = data_render_model->binary->size();
+    size_t binarySize = data_render_model->binary->size();
     if (fwrite(binaryData, binarySize, 1, fp) != 1) {
       fmt::fprintf(
           stderr, "ERROR: Failed to write %lu bytes to file '%s'.\n", binarySize, binaryPath);

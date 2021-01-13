@@ -124,7 +124,7 @@ json MaterialData::serialize() const {
     auto& prop_map = result["extras"]["fromFBX"]["userProperties"];
 
     json j = json::parse(i);
-    for (const auto& k : json::iterator_wrapper(j)) {
+    for (const auto& k : j.items()) {
       prop_map[k.key()] = k.value();
     }
   }

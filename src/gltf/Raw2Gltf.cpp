@@ -58,7 +58,7 @@ T& require(std::map<std::string, std::shared_ptr<T>> map, const std::string& key
 }
 
 template <typename T>
-T& require(std::map<long, std::shared_ptr<T>> map, long key) {
+T& require(std::map<uint64_t, std::shared_ptr<T>> map, uint64_t key) {
   auto iter = map.find(key);
   assert(iter != map.end());
   T& result = *iter->second;
@@ -66,12 +66,13 @@ T& require(std::map<long, std::shared_ptr<T>> map, long key) {
 }
 
 static const std::vector<TriangleIndex> getIndexArray(const RawModel& raw) {
-  std::vector<TriangleIndex> result;
-
-  for (int i = 0; i < raw.GetTriangleCount(); i++) {
-    result.push_back((TriangleIndex)raw.GetTriangle(i).verts[0]);
-    result.push_back((TriangleIndex)raw.GetTriangle(i).verts[1]);
-    result.push_back((TriangleIndex)raw.GetTriangle(i).verts[2]);
+  const int32_t triCount = (int32_t)raw.GetTriangleCount();
+  std::vector<TriangleIndex> result(triCount*3);
+  for (int32_t i = 0; i < triCount; i++) {
+    const auto& tri = raw.GetTriangle(i);
+    result[i+0] = ((TriangleIndex)tri.verts[0]);
+    result[i+1] = ((TriangleIndex)tri.verts[1]);
+    result[i+2] = ((TriangleIndex)tri.verts[2]);
   }
   return result;
 }
@@ -83,7 +84,7 @@ ModelData* Raw2Gltf(
     const GltfOptions& options) {
   if (verboseOutput) {
     fmt::printf("Building render model...\n");
-    for (int i = 0; i < raw.GetMaterialCount(); i++) {
+    for (int32_t i = 0; i < (int32_t)raw.GetMaterialCount(); i++) {
       fmt::printf(
           "Material %d: %s [shading: %s]\n",
           i,
@@ -116,10 +117,10 @@ ModelData* Raw2Gltf(
 
   std::unique_ptr<GltfModel> gltf(new GltfModel(options));
 
-  std::map<long, std::shared_ptr<NodeData>> nodesById;
-  std::map<long, std::shared_ptr<MaterialData>> materialsById;
+  std::map<uint64_t, std::shared_ptr<NodeData>> nodesById;
+  std::map<uint64_t, std::shared_ptr<MaterialData>> materialsById;
   std::map<std::string, std::shared_ptr<TextureData>> textureByIndicesKey;
-  std::map<long, std::shared_ptr<MeshData>> meshBySurfaceId;
+  std::map<uint64_t, std::shared_ptr<MeshData>> meshBySurfaceId;
 
   // for now, we only have one buffer; data->binary points to the same vector as that BufferData
   // does.
@@ -153,7 +154,7 @@ ModelData* Raw2Gltf(
     // animations
     //
 
-    for (int i = 0; i < raw.GetAnimationCount(); i++) {
+    for (int32_t i = 0; i < (int32_t)raw.GetAnimationCount(); i++) {
       const RawAnimation& animation = raw.GetAnimation(i);
 
       if (animation.channels.size() == 0) {
@@ -226,7 +227,8 @@ ModelData* Raw2Gltf(
     // materials
     //
 
-    for (int materialIndex = 0; materialIndex < raw.GetMaterialCount(); materialIndex++) {
+    for (int32_t materialIndex = 0; materialIndex < (int32_t)raw.GetMaterialCount();
+         ++materialIndex) {
       const RawMaterial& material = raw.GetMaterial(materialIndex);
       const bool isTransparent = material.type == RAW_MATERIAL_TYPE_TRANSPARENT ||
           material.type == RAW_MATERIAL_TYPE_SKINNED_TRANSPARENT;
@@ -412,7 +414,7 @@ ModelData* Raw2Gltf(
     for (const auto& surfaceModel : materialModels) {
       assert(surfaceModel.GetSurfaceCount() == 1);
       const RawSurface& rawSurface = surfaceModel.GetSurface(0);
-      const long surfaceId = rawSurface.id;
+      const uint64_t surfaceId = rawSurface.id;
 
       const RawMaterial& rawMaterial =
           surfaceModel.GetMaterial(surfaceModel.GetTriangle(0).materialIndex);
@@ -559,7 +561,7 @@ ModelData* Raw2Gltf(
 
           std::vector<Vec3f> positions, normals;
           std::vector<Vec4f> tangents;
-          for (int jj = 0; jj < surfaceModel.GetVertexCount(); jj++) {
+          for (int32_t jj = 0; jj < (int32_t)surfaceModel.GetVertexCount(); jj++) {
             auto blendVertex = surfaceModel.GetVertex(jj).blends[channelIx];
             shapeBounds.AddPoint(blendVertex.position);
             positions.push_back(blendVertex.position);
@@ -687,7 +689,7 @@ ModelData* Raw2Gltf(
     // cameras
     //
 
-    for (int i = 0; i < raw.GetCameraCount(); i++) {
+    for (int32_t i = 0; i < (int32_t)raw.GetCameraCount(); i++) {
       const RawCamera& cam = raw.GetCamera(i);
       CameraData& camera = *gltf->cameras.hold(new CameraData());
       camera.name = cam.name;
@@ -720,7 +722,7 @@ ModelData* Raw2Gltf(
     //
     std::vector<json> khrPunctualLights;
     if (options.useKHRLightsPunctual) {
-      for (int i = 0; i < raw.GetLightCount(); i++) {
+      for (int32_t i = 0; i < (int32_t)raw.GetLightCount(); i++) {
         const RawLight& light = raw.GetLight(i);
         LightData::Type type;
         switch (light.type) {

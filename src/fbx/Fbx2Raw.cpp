@@ -98,7 +98,7 @@ static void ReadMesh(
   FbxMesh* pMesh = pNode->GetMesh();
 
   // Obtains the surface Id
-  const long surfaceId = pMesh->GetUniqueID();
+  auto surfaceId = pMesh->GetUniqueID();
 
   // Associate the node to this surface
   int nodeId = raw.GetNodeById(pNode->GetUniqueID());
@@ -189,8 +189,8 @@ static void ReadMesh(
 
   rawSurface.skeletonRootId =
       (skinning.IsSkinned()) ? skinning.GetRootNode() : pNode->GetUniqueID();
-  for (int jointIndex = 0; jointIndex < skinning.GetNodeCount(); jointIndex++) {
-    const long jointId = skinning.GetJointId(jointIndex);
+  for (uint32_t jointIndex = 0; jointIndex < skinning.GetNodeCount(); ++jointIndex) {
+    const auto jointId = skinning.GetJointId(jointIndex);
     raw.GetNode(raw.GetNodeById(jointId)).isJoint = true;
 
     rawSurface.jointIds.emplace_back(jointId);
@@ -207,18 +207,18 @@ static void ReadMesh(
       const FbxBlendShapesAccess::TargetShape& shape =
           blendShapes.GetTargetShape(channelIx, targetIx);
       targetShapes.push_back(&shape);
-      auto& blendChannel = blendShapes.GetBlendChannel(channelIx);
+      const auto& blendChannel = blendShapes.GetBlendChannel(channelIx);
 
       rawSurface.blendChannels.push_back(
-          RawBlendChannel{static_cast<float>(blendChannel.deformPercent),
+          RawBlendChannel{(float)blendChannel.deformPercent,
+                          blendChannel.name,
                           shape.normals.LayerPresent(),
-                          shape.tangents.LayerPresent(),
-                          blendChannel.name});
+                          shape.tangents.LayerPresent()});
     }
   }
 
-  int polygonVertexIndex = 0;
-  for (int polygonIndex = 0; polygonIndex < pMesh->GetPolygonCount(); polygonIndex++) {
+  int32_t polygonVertexIndex = 0;
+  for (int32_t polygonIndex = 0; polygonIndex < (int32_t)pMesh->GetPolygonCount(); polygonIndex++) {
     FBX_ASSERT(pMesh->GetPolygonSize(polygonIndex) == 3);
     const std::shared_ptr<FbxMaterialInfo> fbxMaterial = materials.GetMaterial(polygonIndex);
     const std::vector<std::string> userProperties = materials.GetUserProperties(polygonIndex);
@@ -228,11 +228,11 @@ static void ReadMesh(
 
     std::shared_ptr<RawMatProps> rawMatProps;
     FbxString materialName;
-    long materialId;
+    uint64_t materialId;
 
     if (fbxMaterial == nullptr) {
       materialName = "DefaultMaterial";
-      materialId = -1;
+      materialId = UINT64_MAX;
       rawMatProps.reset(new RawTraditionalMatProps(
           RAW_SHADING_MODEL_LAMBERT,
           Vec3f(0, 0, 0),
@@ -269,9 +269,9 @@ static void ReadMesh(
             RAW_SHADING_MODEL_PBR_MET_ROUGH,
             toVec4f(fbxMatInfo->baseColor),
             toVec3f(fbxMatInfo->emissive),
-            fbxMatInfo->emissiveIntensity,
-            fbxMatInfo->metallic,
-            fbxMatInfo->roughness,
+            (float)fbxMatInfo->emissiveIntensity,
+            (float)fbxMatInfo->metallic,
+            (float)fbxMatInfo->roughness,
             fbxMatInfo->invertRoughnessMap));
       } else {
         FbxTraditionalMaterialInfo* fbxMatInfo =
@@ -300,7 +300,7 @@ static void ReadMesh(
             toVec4f(fbxMatInfo->colDiffuse),
             toVec3f(fbxMatInfo->colEmissive),
             toVec3f(fbxMatInfo->colSpecular),
-            fbxMatInfo->shininess));
+            (float)fbxMatInfo->shininess));
       }
     }
 
@@ -501,8 +501,8 @@ static void ReadLight(RawModel& raw, FbxScene* pScene, FbxNode* pNode) {
           RAW_LIGHT_TYPE_SPOT,
           color,
           intensity,
-          (float)pLight->InnerAngle.Get() * M_PI / 180,
-          (float)pLight->OuterAngle.Get() * M_PI / 180);
+          (float)pLight->InnerAngle.Get() * (float)M_PI / 180.f,
+          (float)pLight->OuterAngle.Get() * (float)M_PI / 180.f);
       break;
     }
     default: {
@@ -511,7 +511,7 @@ static void ReadLight(RawModel& raw, FbxScene* pScene, FbxNode* pNode) {
     }
   }
 
-  int nodeId = raw.GetNodeById(pNode->GetUniqueID());
+  auto nodeId = raw.GetNodeById(pNode->GetUniqueID());
   RawNode& node = raw.GetNode(nodeId);
   node.lightIx = lightIx;
 }
@@ -585,7 +585,7 @@ static void ReadCamera(RawModel& raw, FbxScene* pScene, FbxNode* pNode) {
 }
 
 static void ReadNodeProperty(RawModel& raw, FbxNode* pNode, FbxProperty& prop) {
-  int nodeId = raw.GetNodeById(pNode->GetUniqueID());
+  auto nodeId = raw.GetNodeById(pNode->GetUniqueID());
   if (nodeId >= 0) {
     RawNode& node = raw.GetNode(nodeId);
     node.userProperties.push_back(TranscribeProperty(prop).dump());
@@ -677,7 +677,7 @@ static void ReadNodeHierarchy(
     RawModel& raw,
     FbxScene* pScene,
     FbxNode* pNode,
-    const long parentId,
+    uint64_t parentId,
     const std::string& path) {
   const FbxUInt64 nodeId = pNode->GetUniqueID();
   const char* nodeName = pNode->GetName();
@@ -735,7 +735,7 @@ static void ReadNodeHierarchy(
     raw.SetRootNode(nodeId);
   }
 
-  for (int child = 0; child < pNode->GetChildCount(); child++) {
+  for (int child = 0; child < pNode->GetChildCount(); ++child) {
     ReadNodeHierarchy(raw, pScene, pNode->GetChild(child), nodeId, newPath);
   }
 }
@@ -756,7 +756,7 @@ static void ReadAnimations(RawModel& raw, FbxScene* pScene, const GltfOptions& o
   const double epsilon = 1e-5f;
 
   const int animationCount = pScene->GetSrcObjectCount<FbxAnimStack>();
-  for (size_t animIx = 0; animIx < animationCount; animIx++) {
+  for (int animIx = 0; animIx < animationCount; animIx++) {
     FbxAnimStack* pAnimStack = pScene->GetSrcObject<FbxAnimStack>(animIx);
     FbxString animStackName = pAnimStack->GetName();
 
@@ -1147,7 +1147,7 @@ bool LoadFBXFile(
     FbxSystemUnit::cm.ConvertScene(pScene);
   }
   // this is always 0.01, but let's opt for clarity.
-  scaleFactor = FbxSystemUnit::m.GetConversionFactorFrom(FbxSystemUnit::cm);
+  scaleFactor = (float)FbxSystemUnit::m.GetConversionFactorFrom(FbxSystemUnit::cm);
 
   ReadNodeHierarchy(raw, pScene, pScene->GetRootNode(), 0, "");
   ReadNodeAttributes(raw, pScene, pScene->GetRootNode(), textureLocations);

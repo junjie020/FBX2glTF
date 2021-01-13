@@ -78,28 +78,28 @@ void RawModel::AddVertexAttribute(const RawVertexAttribute attrib) {
   vertexAttributes |= attrib;
 }
 
-int RawModel::AddVertex(const RawVertex& vertex) {
+int32_t RawModel::AddVertex(const RawVertex& vertex) {
   auto it = vertexHash.find(vertex);
   if (it != vertexHash.end()) {
     return it->second;
   }
   vertexHash.emplace(vertex, (int)vertices.size());
   vertices.push_back(vertex);
-  return (int)vertices.size() - 1;
+  return (int32_t)vertices.size() - 1;
 }
 
-int RawModel::AddTriangle(
-    const int v0,
-    const int v1,
-    const int v2,
-    const int materialIndex,
-    const int surfaceIndex) {
+int32_t RawModel::AddTriangle(
+    int32_t v0,
+    int32_t v1,
+    int32_t v2,
+    int32_t materialIndex,
+    int32_t surfaceIndex) {
   const RawTriangle triangle = {{v0, v1, v2}, materialIndex, surfaceIndex};
   triangles.push_back(triangle);
-  return (int)triangles.size() - 1;
+  return (int32_t)triangles.size() - 1;
 }
 
-int RawModel::AddTexture(
+int32_t RawModel::AddTexture(
     const std::string& name,
     const std::string& fileName,
     const std::string& fileLocation,
@@ -135,7 +135,7 @@ int RawModel::AddTexture(
   return (int)textures.size() - 1;
 }
 
-int RawModel::AddMaterial(const RawMaterial& material) {
+int32_t RawModel::AddMaterial(const RawMaterial& material) {
   return AddMaterial(
       material.id,
       material.name.c_str(),
@@ -145,8 +145,8 @@ int RawModel::AddMaterial(const RawMaterial& material) {
       material.userProperties);
 }
 
-int RawModel::AddMaterial(
-    const long id,
+int32_t RawModel::AddMaterial(
+    uint64_t id,
     const char* name,
     const RawMaterialType materialType,
     const int textures[RAW_TEXTURE_USAGE_MAX],
@@ -194,7 +194,7 @@ int RawModel::AddMaterial(
   return (int)materials.size() - 1;
 }
 
-int RawModel::AddLight(
+int32_t RawModel::AddLight(
     const char* name,
     const RawLightType lightType,
     const Vec3f color,
@@ -226,18 +226,18 @@ int RawModel::AddLight(
   return (int)lights.size() - 1;
 }
 
-int RawModel::AddSurface(const RawSurface& surface) {
+int32_t RawModel::AddSurface(const RawSurface& surface) {
   for (size_t i = 0; i < surfaces.size(); i++) {
     if (StringUtils::CompareNoCase(surfaces[i].name, surface.name) == 0) {
-      return (int)i;
+      return (int32_t)i;
     }
   }
 
   surfaces.emplace_back(surface);
-  return (int)(surfaces.size() - 1);
+  return (int32_t)(surfaces.size() - 1);
 }
 
-int RawModel::AddSurface(const char* name, const long surfaceId) {
+int32_t RawModel::AddSurface(const char* name, uint64_t surfaceId) {
   assert(name[0] != '\0');
 
   for (size_t i = 0; i < surfaces.size(); i++) {
@@ -255,30 +255,30 @@ int RawModel::AddSurface(const char* name, const long surfaceId) {
   return (int)(surfaces.size() - 1);
 }
 
-int RawModel::AddAnimation(const RawAnimation& animation) {
+int32_t RawModel::AddAnimation(const RawAnimation& animation) {
   animations.emplace_back(animation);
-  return (int)(animations.size() - 1);
+  return (int32_t)(animations.size() - 1);
 }
 
-int RawModel::AddNode(const RawNode& node) {
+int32_t RawModel::AddNode(const RawNode& node) {
   for (size_t i = 0; i < nodes.size(); i++) {
     if (nodes[i].id == node.id) {
-      return (int)i;
+      return (int32_t)i;
     }
   }
 
   nodes.emplace_back(node);
-  return (int)nodes.size() - 1;
+  return (int32_t)nodes.size() - 1;
 }
 
-int RawModel::AddCameraPerspective(
+int32_t RawModel::AddCameraPerspective(
     const char* name,
-    const long nodeId,
-    const float aspectRatio,
-    const float fovDegreesX,
-    const float fovDegreesY,
-    const float nearZ,
-    const float farZ) {
+    uint64_t nodeId,
+    float aspectRatio,
+    float fovDegreesX,
+    float fovDegreesY,
+    float nearZ,
+    float farZ) {
   RawCamera camera;
   camera.name = name;
   camera.nodeId = nodeId;
@@ -289,16 +289,16 @@ int RawModel::AddCameraPerspective(
   camera.perspective.nearZ = nearZ;
   camera.perspective.farZ = farZ;
   cameras.emplace_back(camera);
-  return (int)cameras.size() - 1;
+  return (int32_t)cameras.size() - 1;
 }
 
-int RawModel::AddCameraOrthographic(
+int32_t RawModel::AddCameraOrthographic(
     const char* name,
-    const long nodeId,
-    const float magX,
-    const float magY,
-    const float nearZ,
-    const float farZ) {
+    uint64_t nodeId,
+    float magX,
+    float magY,
+    float nearZ,
+    float farZ) {
   RawCamera camera;
   camera.name = name;
   camera.nodeId = nodeId;
@@ -311,14 +311,11 @@ int RawModel::AddCameraOrthographic(
   return (int)cameras.size() - 1;
 }
 
-int RawModel::AddNode(const long id, const char* name, const long parentId) {
+int32_t RawModel::AddNode(uint64_t id, const char* name, uint64_t parentId) {
   assert(name[0] != '\0');
-
-  for (size_t i = 0; i < nodes.size(); i++) {
-    if (nodes[i].id == id) {
-      return (int)i;
-    }
-  }
+  auto idx = GetNodeById(id);
+  if (idx >= 0)
+    return idx;
 
   RawNode joint;
   joint.isJoint = false;
@@ -342,7 +339,7 @@ void RawModel::Condense() {
 
     surfaces.clear();
 
-    std::set<int> survivingSurfaceIds;
+    std::set<uint64_t> survivingSurfaceIds;
     for (auto& triangle : triangles) {
       const RawSurface& surface = oldSurfaces[triangle.surfaceIndex];
       const int surfaceIndex = AddSurface(surface.name.c_str(), surface.id);
@@ -559,14 +556,13 @@ void RawModel::CreateMaterialModels(
     // FIXME: will have to unlink from the nodes, transform both surfaces into a
     // common space, and reparent to a new node with appropriate transform.
 
-    const int prevSurfaceCount = model->GetSurfaceCount();
-    const int materialIndex = model->AddMaterial(materials[sortedTriangles[i].materialIndex]);
-    const int surfaceIndex = model->AddSurface(surfaces[sortedTriangles[i].surfaceIndex]);
+    const uint32_t prevSurfaceCount = model->GetSurfaceCount();
+    const int32_t materialIndex = model->AddMaterial(materials[sortedTriangles[i].materialIndex]);
+    const int32_t surfaceIndex = model->AddSurface(surfaces[sortedTriangles[i].surfaceIndex]);
     RawSurface& rawSurface = model->GetSurface(surfaceIndex);
 
     if (model->GetSurfaceCount() > prevSurfaceCount) {
-      const std::vector<long>& jointIds = surfaces[sortedTriangles[i].surfaceIndex].jointIds;
-      for (const auto& jointId : jointIds) {
+      for (auto jointId : surfaces[sortedTriangles[i].surfaceIndex].jointIds) {
         const int nodeIndex = GetNodeById(jointId);
         assert(nodeIndex != -1);
         model->AddNode(GetNode(nodeIndex));
@@ -574,8 +570,8 @@ void RawModel::CreateMaterialModels(
       rawSurface.bounds.Clear();
     }
 
-    int verts[3];
-    for (int j = 0; j < 3; j++) {
+    int32_t verts[3];
+    for (int32_t j = 0; j < 3; j++) {
       RawVertex vertex = vertices[sortedTriangles[i].verts[j]];
 
       if (keepAttribs != -1) {
@@ -640,16 +636,15 @@ void RawModel::CreateMaterialModels(
   }
 }
 
-int RawModel::GetNodeById(const long nodeId) const {
-  for (size_t i = 0; i < nodes.size(); i++) {
-    if (nodes[i].id == nodeId) {
-      return (int)i;
-    }
+int32_t RawModel::GetNodeById(uint64_t nodeId) const {
+  for (int32_t idx = 0; idx < (int32_t)nodes.size(); ++idx) {
+    if (nodes[idx].id == nodeId)
+      return idx;
   }
   return -1;
 }
 
-int RawModel::GetSurfaceById(const long surfaceId) const {
+int32_t RawModel::GetSurfaceById(uint64_t surfaceId) const {
   for (size_t i = 0; i < surfaces.size(); i++) {
     if (surfaces[i].id == surfaceId) {
       return (int)i;
@@ -680,7 +675,7 @@ Vec3f RawModel::getFaceNormal(int verts[3]) const {
   return result.Normalized() * angle * area;
 }
 
-size_t RawModel::CalculateNormals(bool onlyBroken) {
+uint32_t RawModel::CalculateNormals(bool onlyBroken) {
   Vec3f averagePos = Vec3f{0.0f};
   std::set<int> brokenVerts;
   for (int vertIx = 0; vertIx < vertices.size(); vertIx++) {
@@ -725,5 +720,5 @@ size_t RawModel::CalculateNormals(bool onlyBroken) {
     }
     vertex.normal.Normalize();
   }
-  return onlyBroken ? brokenVerts.size() : vertices.size();
+  return uint32_t(onlyBroken ? brokenVerts.size() : vertices.size());
 }
