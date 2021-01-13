@@ -45,16 +45,12 @@ endif()
 
 # draco
 add_subdirectory(${3RD_DIR}/draco)
+set(DRACO_INCLUDE_DIR "${3RD_DIR}/draco/src" "${CMAKE_BINARY_DIR}")
+gen_lib_name(draco DRACO_LIB_NAME)
+set(DRACO_LIB "${3RD_BINARY_DIR}/draco/${CMAKE_BUILD_TYPE}/${DRACO_LIB_NAME}")
 
 #CPPCODEC
 set(CPPCODEC_INCLUDE_DIR "${3RD_DIR}/cppcodec")
-
-#DRACO
-set(DRACO_INCLUDE_DIR "${3RD_DIR}/draco/src" "${CMAKE_BINARY_DIR}")
-
-#gen_lib_name(dracoenc DRACO_LIB_NAME)
-gen_lib_name(draco DRACO_LIB_NAME)
-set(DRACO_LIB "${3RD_BINARY_DIR}/draco/${CMAKE_BUILD_TYPE}/${DRACO_LIB_NAME}")
 
 #FIFO_MAP
 set(FIFO_MAP_INCLUDE_DIR "${3RD_DIR}/fifo_map/src")
@@ -179,6 +175,8 @@ target_include_directories(libFBX2glTF PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
+target_precompile_headers(libFBX2glTF PRIVATE ${CMAKE_SOURCE_DIR}/src/pch.h)
+
 target_include_directories(libFBX2glTF PUBLIC
   ${STB_INCLUDE_DIR}
   ${FBXSDK_INCLUDE_DIR}
@@ -196,6 +194,8 @@ target_include_directories(appFBX2glTF PUBLIC
   ${CLI11_INCLUDE_DIR}
 )
 target_link_libraries(appFBX2glTF libFBX2glTF)
+
+target_precompile_headers(appFBX2glTF REUSE_FROM libFBX2glTF)
 
 install (TARGETS libFBX2glTF appFBX2glTF
         RUNTIME DESTINATION bin
