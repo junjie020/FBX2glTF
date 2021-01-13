@@ -8,14 +8,6 @@
 
 #pragma once
 
-#include <algorithm>
-#include <fstream>
-#include <map>
-#include <set>
-#include <string>
-#include <unordered_map>
-#include <vector>
-
 #include "FBX2glTF.h"
 
 class FbxSkinningAccess {

@@ -66,7 +66,7 @@ inline std::string GetFileBase(const std::string& path) {
 inline std::optional<std::string> GetFileSuffix(const std::string& path) {
   const auto& extension = std::filesystem::path(path).extension();
   if (extension.empty()) {
-    return std::optional<std::string>();
+    return std::nullopt;
   }
   return extension.string().substr(1);
 }

@@ -8,11 +8,6 @@
 
 #pragma once
 
-#include <algorithm>
-#include <fstream>
-#include <string>
-#include <vector>
-
 #include "FBX2glTF.h"
 #include "FbxLayerElementAccess.hpp"
 

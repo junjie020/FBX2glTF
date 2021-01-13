@@ -7,19 +7,6 @@
  */
 
 #include "Fbx2Raw.hpp"
-
-#include <algorithm>
-#include <cassert>
-#include <cmath>
-#include <cstdint>
-#include <cstdio>
-#include <fstream>
-#include <map>
-#include <set>
-#include <string>
-#include <unordered_map>
-#include <vector>
-
 #include "FBX2glTF.h"
 
 #include "raw/RawModel.hpp"

@@ -8,9 +8,6 @@
 
 #pragma once
 
-#include <map>
-#include <vector>
-
 #include "FBX2glTF.h"
 
 class FbxMaterialInfo {

@@ -1,6 +1,3 @@
-#include <climits>
-#include <string>
-
 #if defined(_WIN32)
 // Tell Windows not to define min() and max() macros
 #define NOMINMAX
@@ -24,3 +21,18 @@
 // give all modules access to our tweaked JSON
 #include <fifo_map.hpp>
 #include <json.hpp>
+
+#include <algorithm>
+#include <fstream>
+#include <map>
+#include <set>
+#include <string>
+#include <unordered_map>
+#include <vector>
+#include <string>
+
+#include <climits>
+#include <cassert>
+#include <cmath>
+#include <cstdint>
+#include <cstdio>

@@ -8,14 +8,6 @@
 
 #include "File_Utils.hpp"
 
-#include <fstream>
-#include <set>
-#include <string>
-#include <vector>
-
-#include <stdint.h>
-#include <stdio.h>
-
 #include "FBX2glTF.h"
 #include "String_Utils.hpp"
 

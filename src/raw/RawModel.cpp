@@ -8,17 +8,6 @@
 
 #include "RawModel.hpp"
 
-#include <cmath>
-#include <map>
-#include <set>
-#include <string>
-#include <unordered_map>
-#include <vector>
-
-#if defined(__unix__)
-#include <algorithm>
-#endif
-
 #include "utils/Image_Utils.hpp"
 #include "utils/String_Utils.hpp"
 

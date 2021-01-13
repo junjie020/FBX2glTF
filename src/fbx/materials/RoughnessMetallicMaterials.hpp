@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include <map>
-
 #include "FbxMaterials.hpp"
 
 struct FbxRoughMetMaterialInfo : FbxMaterialInfo {
