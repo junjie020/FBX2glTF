@@ -76,9 +76,7 @@ json NodeData::serialize() const {
     if (mesh >= 0) {
       result["mesh"] = mesh;
     }
-    if (!skeletons.empty()) {
-      result["skeletons"] = skeletons;
-    }
+
     if (skin >= 0) {
       result["skin"] = skin;
     }

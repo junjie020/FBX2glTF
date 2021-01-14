@@ -6,12 +6,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-#include <fstream>
-#include <iostream>
-#include <map>
-#include <unordered_map>
-#include <vector>
-
 #include <CLI11.hpp>
 
 #include "FBX2glTF.h"
