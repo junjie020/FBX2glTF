@@ -341,7 +341,7 @@ struct RawNode {
   Quatf rotation;
   Vec3f scale;
   uint64_t surfaceId;
-  uint32_t lightIx;
+  int32_t lightIx;
   std::vector<std::string> userProperties;
 };
 
