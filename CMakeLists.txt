@@ -60,6 +60,9 @@ set(FMT_INCLUDE_DIR "${3RD_DIR}/fmt/include")
 #stb
 set(STB_INCLUDE_DIR "${3RD_DIR}/stb")
 
+#tinygltf
+set(TINYGLTF_INCLUDE_DIR "${3RD_DIR}/tinygltf")
+
 #json
 set(JSON_INCLUDE_DIR "${3RD_DIR}/json/single_include/nlohmann")
 
@@ -179,6 +182,7 @@ target_precompile_headers(libFBX2glTF PRIVATE ${CMAKE_SOURCE_DIR}/src/pch.h)
 
 target_include_directories(libFBX2glTF PUBLIC
   ${STB_INCLUDE_DIR}
+  ${TINYGLTF_INCLUDE_DIR}
   ${FBXSDK_INCLUDE_DIR}
   ${DRACO_INCLUDE_DIR}
   ${JSON_INCLUDE_DIR}
